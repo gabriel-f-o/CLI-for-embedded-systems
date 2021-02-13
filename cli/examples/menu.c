@@ -22,8 +22,11 @@ static cliArgumentsDetails_t det[] = {
  * PRIVATE FUNCTIONS
  *********************************************/
 
-//add 2 -5
-//add 0x0A 1
+//add 10 11
+//add a b
+//ad 0xA 0xb
+//a a b
+//a 10 -10
 static void addFn(){
     int8_t n1 = cli_get_int8_argument(0, NULL);
     int8_t n2 = cli_get_int8_argument(1, NULL);
@@ -53,6 +56,8 @@ static void floatDiv(){
 }
 #endif
 
+//fill_l {  1   2  3  4 }
+//fill_l { 0xA 10 0010 a b 0x15  }
 static void fill_LE(){
     uint8_t buffer[100];
     
@@ -63,6 +68,8 @@ static void fill_LE(){
     for(int i = 0; i < bRead; i++) printf("   [%i] = %u -> 0x%02X\n", i, buffer[i], buffer[i]);
 }
 
+//fill_b {  1   2  3  4 }
+//fill_b { 0xA 10 0010 a b 0x15  }
 static void fill_BE(){
     uint8_t buffer[100];
     
