@@ -10,11 +10,11 @@
  //s a 1 2
 static void average(){
     float sum = 0;
-    int64_t n;
+    bool res = false;
     int i = 0;
     
     while(1){
-        bool res = cli_get_int_argument(i++, &n);
+        uint8_t n = cli_get_uint8_argument(i++, &res);
         
         if(res == false) break;
         
@@ -26,6 +26,7 @@ static void average(){
     printf("CLI sub menu -> average -> Average is %.3f\n", sum);
 }
 
+#if (defined(CLI_FLOAT_EN) && CLI_FLOAT_EN == 1)
 //s v 2.2 2
 //s v 5 2
 //s v 6 2.5
@@ -35,17 +36,17 @@ static void varSum(){
     float f = 0;
     float sum = 0;
     
-    res = cli_get_int_argument(0, &temp);
+    temp = cli_get_int64_argument(0, &res);
     if(res == false){
-        res = cli_get_float_argument(0, &f);
+        f = cli_get_float_argument(0, &res);
         if(res == true) sum += f;
     }
     else
         sum += temp;
     
-    res = cli_get_int_argument(1, &temp);
+    temp = cli_get_int64_argument(1, &res);
     if(res == false){
-        res = cli_get_float_argument(1, &f);
+        f = cli_get_float_argument(1, &res);
         if(res == true) sum += f;
     }
     else
@@ -53,14 +54,17 @@ static void varSum(){
         
     printf("CLI sub menu -> var_sum -> sum is %.3f\n", sum);
 }
+#endif
 
 /**********************************************
  * GLOBAL VARIABLES
  *********************************************/
  
 cliElement_t subMenu[] = {
-    cliActionElement("average", average, "ii...", "This function calculates the average of various int numbers (2 arg minimum)"),
-    cliActionElement("var_sum", varSum, "**", "This function sums any 2 numbers"),
+    cliActionElement("average",     average,    "ii...",    "This function calculates the average of various int numbers (2 arg minimum)"),
+    #if (defined(CLI_FLOAT_EN) && CLI_FLOAT_EN == 1)
+    cliActionElement("var_sum",     varSum,     "**",       "This function sums any 2 numbers"),
+    #endif
     cliMenuTerminator()
 };
 

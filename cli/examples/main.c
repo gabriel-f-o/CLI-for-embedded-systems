@@ -8,7 +8,7 @@ Write your code in this editor and press "Run" button to compile and execute it.
 
 #include "cli.h"
 
-uint8_t cliBuff[128];
+char cliBuff[128];
 
 int main()
 {
@@ -19,6 +19,8 @@ int main()
         c = getc(stdin);
         cli_insert_char(cliBuff, sizeof(cliBuff), c);
         cli_treat_command(cliBuff, sizeof(cliBuff));
+        
+       // if(c=='\n')return 0;
     }
     return 0;
 }

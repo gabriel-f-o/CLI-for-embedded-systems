@@ -25,54 +25,74 @@ static cliArgumentsDetails_t det[] = {
 //add 2 -5
 //add 0x0A 1
 static void addFn(){
-    int64_t n1 = 0, n2 = 0;
-    
-    cli_get_int_argument(0, &n1);
-    cli_get_int_argument(1, &n2);
+    int8_t n1 = cli_get_int8_argument(0, NULL);
+    int8_t n2 = cli_get_int8_argument(1, NULL);
 
-    printf("CLI sum -> %ld + %ld = %ld\n", n1, n2, n1+n2);
+    printf("CLI sum -> %d + %d = %d\n", n1, n2, n1+n2);
 }
 
 //hello "hello"
 //hello "hello\nmy name is\n\"gabriel\""\0"
-//hello {68 65 6c 6c 6f}
+//he {68 65 6c 6c 6f}
 static void helloFn(){
     char buffer[100];
     
-    size_t bRead = 0;
-    
-    cli_get_string_argument(0, buffer, sizeof(buffer), &bRead);
+    size_t bRead = cli_get_string_argument(0, buffer, sizeof(buffer), NULL);
     
     printf("CLI hello -> read %lu bytes, string = '%s'\n", bRead, buffer);
 }
 
 #if (defined(CLI_FLOAT_EN) && CLI_FLOAT_EN == 1)
 
-//div 2.7 3.9
+//d 2.7 3.9
 static void floatDiv(){
-    float f1 = 0, f2 = 0;
-    
-    cli_get_float_argument(0, &f1);
-    cli_get_float_argument(1, &f2);
+    float f1 = cli_get_float_argument(0, NULL);
+    float f2 = cli_get_float_argument(1, NULL);
 
     printf("Cli div -> %.3f / %.3f = %.3f", f1, f2, f1/f2);
 }
 #endif
+
+static void fill_LE(){
+    uint8_t buffer[100];
+    
+    size_t bRead = cli_get_buffer_argument(0, buffer, sizeof(buffer), NULL);
+    
+    printf("read %lu bytes\r\n", bRead);
+    
+    for(int i = 0; i < bRead; i++) printf("   [%i] = %u -> 0x%02X\n", i, buffer[i], buffer[i]);
+}
+
+static void fill_BE(){
+    uint8_t buffer[100];
+    
+    size_t bRead = cli_get_buffer_argument_big_endian(0, buffer, sizeof(buffer), NULL);
+    
+    printf("read %lu bytes\r\n", bRead);
+    
+    for(int i = 0; i < bRead; i++) printf("   [%i] = %u -> 0x%02X\n", i, buffer[i], buffer[i]);
+}
 
 /**********************************************
  * GLOBAL VARIABLES
  *********************************************/
  
 cliElement_t cliMainMenu[] = {
-    cliSubMenuElement("sub", subMenu, "sub menu"),
-    cliActionElementDetailed("add", addFn, "ii", "adds 2 numbers and prints the result", det),
-    cliActionElement("hello", helloFn, "s", "Prints a string passed by argument"),
+    //SUB menus
+    cliSubMenuElement("sub",        subMenu,    "sub menu"      ),
+    cliSubMenuElement("robust?",    NULL,       NULL            ),
+
+    //ACTION
+    cliActionElement(               "fill_le",                             fill_LE,         "b",        "Fills a buffer with bytes sent by CLI (little endian)"             ),
+    cliActionElement(               "fill_be",                             fill_BE,         "b",        "Fills a buffer with bytes sent by CLI (big endian)"                ),
+
+    cliActionElementDetailed(       "add",                                 addFn,           "ii",       "adds 2 numbers and prints the result",                     det     ),
+    cliActionElement(               "hello",                               helloFn,         "s",        "Prints a string passed by argument"                                ),
     
     #if (defined(CLI_FLOAT_EN) && CLI_FLOAT_EN == 1)
-    cliActionElement("div", floatDiv, "ff", "Prints a string passed by argument"),
+    cliActionElement(               "div",                                 floatDiv,        "ff",       "Divides 2 floating numbers"                                        ),
     #endif
     
-    cliSubMenuElement("robust?", NULL, NULL),
     cliMenuTerminator()
 };
 
