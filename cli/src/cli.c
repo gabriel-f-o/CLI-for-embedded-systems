@@ -8,7 +8,7 @@
 
 #define BASE_PRINT(S, ...)       cli_printf(S,## __VA_ARGS__)
 #define BASE_PRINTF(S, ...)      cli_printf(S,## __VA_ARGS__)
-#define BASE_PRINTLN(S, ...)     cli_printf(S"\n", ##__VA_ARGS__)
+#define BASE_PRINTLN(S, ...)     cli_printf(S"\r\n", ##__VA_ARGS__)
 
 #if (defined(CLI_MENU_PRINT_ENABLE) && CLI_MENU_PRINT_ENABLE == 1)
     #define MENU_PRINT(S, ...)       BASE_PRINT(S,## __VA_ARGS__)
@@ -57,7 +57,7 @@ static cliElement_t* currEl = NULL;
 #if (defined(CLI_POLLING_EN) && CLI_POLLING_EN == 1)
 bool cli_cmd_waiting_treatment = false;
 #else
-static void cli_treat_command(uint8_t cliBuffer[], size_t maxLen);
+static void cli_treat_command(char cliBuffer[], size_t maxLen);
 #endif //CLI_POLLING_EN
 
 /**********************************************
@@ -103,7 +103,7 @@ static int64_t cli_verify_args_str(cliElement_t const * const e, bool* elipsisPr
             
             case '.' : {
                 if(len < i + 2 || e->args[i + 1] != '.' || e->args[i + 2] != '.'){
-                    ERR_PRINTLN("Arguments string list contains incomplete elipsis fo action '%s'", ( (e->name == NULL) ? "NULL_NAME" : e->name ) );
+                    ERR_PRINTLN("Arguments string list contains incomplete elipsis for action '%s'", ( (e->name == NULL) ? "NULL_NAME" : e->name ) );
                     return -1;
                 }
                 
@@ -137,7 +137,7 @@ static void cli_print_element(cliElement_t const * const e){
     
     for(int i = 0; i < (int)(15 - (len + 5)); i++) MENU_PRINTF(" ");
     
-    MENU_PRINTF(" - %s\r\n", ( (e->desc == NULL) ? "NULL_DESC" : e->desc) );
+    MENU_PRINTLN(" - %s", ( (e->desc == NULL) ? "NULL_DESC" : e->desc) );
 } 
 
 static void cli_print_menu(cliElement_t const * const e){
@@ -149,6 +149,8 @@ static void cli_print_menu(cliElement_t const * const e){
 
     for(uint8_t i = 0; !cli_is_terminator(&e->subMenuRef[i]); i++)
         cli_print_element(&e->subMenuRef[i]);
+        
+    MENU_PRINTLN("");
 }
 
 static void cli_print_action(cliElement_t const * const e){
@@ -158,7 +160,7 @@ static void cli_print_action(cliElement_t const * const e){
         return;
     }
     
-    MENU_PRINTF("Action '%s' usage : \r\n", ( (e->name == NULL) ? "NULL_NAME" : e->name) );
+    MENU_PRINTLN("Action '%s' - %s - usage :", ( (e->name == NULL) ? "NULL_NAME" : e->name), ( (e->desc == NULL) ? "NULL_DESC" : e->desc ) );
     
     bool elipsisPresent = 0;
     int64_t len = cli_verify_args_str(e, &elipsisPresent);
@@ -168,20 +170,21 @@ static void cli_print_action(cliElement_t const * const e){
     }
     
     if(len == 0){
-        MENU_PRINTF("   No arguments\r\n");
+        MENU_PRINTLN("   No arguments");
         return;
     }
     
-    bool argsDescEnded = false;
+    bool argsDescEnded = (e->argsDesc == NULL || e->argsDesc[0] == NULL);
     
-    for(int i = 0; i < len; i++){
+    int i = 0;
+    for(i = 0; i < len; i++){
         switch(e->args[i]){
             #if (defined(CLI_FLOAT_EN) && CLI_FLOAT_EN == 1)
             case 'f' : MENU_PRINTF("   < float   > - "); break;
             #endif
 
-            case 'u' : MENU_PRINTF("   < uint32  > - "); break;
-            case 'i' : MENU_PRINTF("   < int32   > - "); break;
+            case 'u' : MENU_PRINTF("   < uint64  > - "); break;
+            case 'i' : MENU_PRINTF("   < int64   > - "); break;
             case 's' : MENU_PRINTF("   < string  > - "); break;
             case 'b' : MENU_PRINTF("   < buffer  > - "); break;
             case '*' : MENU_PRINTF("   < any     > - "); break;
@@ -191,16 +194,22 @@ static void cli_print_action(cliElement_t const * const e){
         argsDescEnded = (argsDescEnded == true || e->argsDesc == NULL || e->argsDesc[i] == NULL);
         
         if(argsDescEnded){
-            MENU_PRINTF("\r\n");
+            MENU_PRINTLN("");
             continue;
         }
         
-        MENU_PRINTF("%s\r\n", e->argsDesc[i]);   
+        MENU_PRINTLN("%s", e->argsDesc[i]);   
     }
     
     if(elipsisPresent){
         MENU_PRINTF("   < various > - ");
+        
+        if(!argsDescEnded)
+            MENU_PRINTLN("%s", e->argsDesc[i]); 
+            MENU_PRINTLN("");
     }
+    
+    MENU_PRINTLN("");
 }
 
 static bool cli_str_starts_with(char const tkn[], char const str[]){
@@ -219,7 +228,7 @@ static bool cli_str_starts_with(char const tkn[], char const str[]){
     return true;
 }
 
-static cliElement_t* cli_find_element_in_menu(char* tkn, uint8_t cliBuffer[], size_t maxLen, cliElement_t currentMenu[]){
+static cliElement_t* cli_find_element_in_menu(char* tkn, char cliBuffer[], size_t maxLen, cliElement_t currentMenu[]){
     if(tkn == NULL) return NULL;
     if(maxLen == 0) return NULL;
     if(cliBuffer == NULL) return NULL;
@@ -300,9 +309,9 @@ static char* cli_go_to_next_argument(char* arg){
 static void cli_print_arg(char* s){
 #if (defined(CLI_DEBUG_ENABLE) && CLI_DEBUG_ENABLE == 1)
     int len = cli_arg_str_len(s);
-    DBG_PRINT("Argument size %d = ", len);
+    DBG_PRINTF("Argument size %d = ", len);
     for(int i = 0; i < len; i++) DBG_PRINTF("%c", s[i]);
-    DBG_PRINTF("\r\n");
+    DBG_PRINTLN("");
 #endif
 }
 
@@ -345,33 +354,29 @@ static bool cli_verify_float(char* tkn, bool printEn){
 
 static bool cli_verify_int(char* tkn, bool isUnsigned, bool printEn){
     int32_t len = cli_arg_str_len(tkn);
-
+    bool is_negative = false;
     int32_t i = 0;
-    bool isHex = false;
 
     if(isUnsigned == false && tkn[0] == '-'){
         if(len == 1) {
             if(printEn) ERR_PRINTLN("Negative int does not begin");
             return false;
         }
+        is_negative = true;
         i++;
-    }
-    else if(len > 1 && tkn[0] == '0' && tolower(tkn[1]) == 'x'){
-        if(len == 2){ 
-            if(printEn) ERR_PRINTLN("Int in hex form does not begin");
-            return false;
-        }
-        
-        isHex = true;
-        i += 2;
     }
     
     while(i < len){
-        if( !( ( ( '0' <= tkn[i] && tkn[i] <= '9' ) ) || (isHex == true && 'a' <= tolower(tkn[i]) && tolower(tkn[i]) <= 'f') )  ){ 
-            if(printEn) ERR_PRINTLN("Invalid character in %s int argument in %s format", ( (isUnsigned == true) ? "unsigned" : "signed" ), ( (isHex == true) ? "hex" : "normal" ) );
+        if( tolower(tkn[i]) == 'x' && ( tkn[i-1] != '0' || (tkn[i-2] != ' ' && tkn[i-2] != '\0') || ! ( ( '0' <= tkn[i+1] && tkn[i+1] <= '9' ) || ('a' <= tolower(tkn[i+1]) && tolower(tkn[i+1]) <= 'f') ) ) ){
+            if(printEn) ERR_PRINTLN("Incorrect Hex format in %s int argument", ( (isUnsigned == true) ? "unsigned" : "signed" ));
             return false;
-            
         }
+        
+        if( !( ( ( '0' <= tkn[i] && tkn[i] <= '9' ) ) || ( is_negative == false && ( ('a' <= tolower(tkn[i]) && tolower(tkn[i]) <= 'f') || tolower(tkn[i]) == 'x') ) ) ) {
+            if(printEn) ERR_PRINTLN("Invalid character in %s int argument", ( (isUnsigned == true) ? "unsigned" : "signed" ) );
+            return false;
+        }
+
         i++;
     }  
     
@@ -396,24 +401,19 @@ static bool cli_verify_buffer(char* tkn, bool printEn){
     
     if(tkn[0] == '"') return true;
     
-    int digitCount = 0;
-
     for(i = 1; i < len; i++){
         if(tkn[i] == '}') break; 
         
-        if(tkn[i] == ' ') {
-            digitCount = 0; 
-            continue; 
-        }
+        if(tkn[i] == ' ') continue;
         
-        if( !( ( ( '0' <= tkn[i] && tkn[i] <= '9' ) ) || ('a' <= tolower(tkn[i]) && tolower(tkn[i]) <= 'f') )  ) {
-            if(printEn) ERR_PRINTLN("Invalid character in buffer beginning with '{'");
+        if( tolower(tkn[i]) == 'x' && ( tkn[i-1] != '0' || (tkn[i-2] != ' ' && tkn[i-2] != '{') || ! ( ( '0' <= tkn[i+1] && tkn[i+1] <= '9' ) || ('a' <= tolower(tkn[i+1]) && tolower(tkn[i+1]) <= 'f') ) ) ){
+            if(printEn) ERR_PRINTLN("Incorrect Hex format in buffer beginning with '{'");
             return false;
         }
         
-        if(++digitCount >= 3){
-            if(printEn) ERR_PRINTLN("More than 3 digits in buffer beginning with '{'");
-            return false; 
+        if( !( ( ( '0' <= tkn[i] && tkn[i] <= '9' ) ) || ('a' <= tolower(tkn[i]) && tolower(tkn[i]) <= 'f') ) && tolower(tkn[i]) != 'x' ) {
+            if(printEn) ERR_PRINTLN("Invalid character in buffer beginning with '{'");
+            return false;
         }
     }
     
@@ -501,7 +501,7 @@ static bool cli_verify_arguments(cliElement_t* e){
             }
             
             default : {
-                DBG_PRINTF("Unrecognized arguments\r\n");
+                DBG_PRINTLN("Unrecognized arguments");
                 ERR_PRINTLN("Error occured in argument %ld in action '%s'", i, ( (e->name == NULL) ? "NULL_NAME" : e->name ) );
                 return false;
             }
@@ -559,11 +559,11 @@ static void cli_execute_action(cliElement_t* e){
         if(argsStr == NULL && len != 0) { ERR_PRINTLN("No arguments in list"); break; }
         
         while(argsStr != NULL && argsStr[0] != '\0') {
-            if(argsStr[0] == '-' || argsStr[0] == '{' || argsStr[0] == '"' || ('0' <= argsStr[0] && argsStr[0] <= '9')) break;
+            if(argsStr[0] == '-' || argsStr[0] == '{' || argsStr[0] == '"' || ('0' <= argsStr[0] && argsStr[0] <= '9') || ('a' <= argsStr[0] && argsStr[0] <= 'f')) break;
             argsStr++;
         }
         
-        if(argsStr != NULL && argsStr[0] == '\0' && len != 0) { ERR_PRINTLN("No arguments in list"); break; }
+        if(argsStr != NULL && argsStr[0] == '\0' && len != 0) { ERR_PRINTLN("Unable to find first argument in list"); break; }
         
         if(cli_verify_arguments(e) == false) { DBG_PRINTLN("Invalid args"); break; }
         
@@ -589,7 +589,7 @@ static void cli_execute_action(cliElement_t* e){
     cli_print_action(e);
 }
 
-static void cli_find_action(uint8_t cliBuffer[], size_t maxLen){
+static void cli_find_action(char cliBuffer[], size_t maxLen){
     if(maxLen == 0) return;
     if(cliBuffer == NULL) return;
     
@@ -620,6 +620,16 @@ static void cli_find_action(uint8_t cliBuffer[], size_t maxLen){
     
     MENU_PRINTF("Menu '%s' - %s\r\n", currentMenu->name, currentMenu->desc);
     cli_print_menu(currentMenu);
+}
+
+static bool cli_buff_element_is_hex(char* base, size_t argLen){
+    if(base[0] == '0' && tolower(base[1]) == 'x') return true;
+    
+    for(size_t i = 0; i < argLen; i++){
+        if('a' <= tolower(base[i]) && tolower(base[i]) <= 'z') return true;
+    }
+    
+    return false;
 }
 
 static bool cli_get_int_arg(size_t argNum, int64_t *res, bool isUnsigned){
@@ -661,15 +671,10 @@ static bool cli_get_int_arg(size_t argNum, int64_t *res, bool isUnsigned){
         
     int32_t argLen = cli_arg_str_len(argBase);
     
-    int base = 10;
+    int num_base = ( (cli_buff_element_is_hex(argBase, argLen) == true) ? 16 : 10 );
+        
+    *res = strtol(argBase, NULL, num_base);
 
-    if(argLen >= 3 && argBase[0] == '0' && tolower(argBase[1]) == 'x' ){ 
-        base = 16;
-        argBase += 2;
-    }
-    
-    *res = strtol(argBase, NULL, base);
-    
     return true;
 }
 
@@ -717,23 +722,30 @@ static bool cli_get_curly_braces(char* base, int32_t argLen, uint8_t buff[], siz
     bool searchNextByte = false;
     
     for(int i = 1; i < argLen - 1; i++){
-        if(pos >= (int64_t)(buffLen - endString)){
+        
+        if(base[i] == ' ') continue;
+
+        int32_t sz = cli_arg_str_len(&base[i]);
+        
+        int num_base = ( (cli_buff_element_is_hex(&base[i], sz) == true) ? 16 : 10 );
+        
+        uint64_t num = strtol(&base[i], NULL, num_base);
+        
+        if(num > 255){
+            ERR_PRINTLN("Buffer argument error in byte number %u : Exceeded maximum value", pos);
+            err = true;
+            break;
+        }
+        
+        if(pos >= buffLen - endString){
             ERR_PRINTLN("Buffer received is too tiny, exiting...");
             err = true;
             break;
         }
         
-        if(searchNextByte && base[i] != ' '){
-            searchNextByte = false;
-            continue;
-        }
+        buff[pos++] = (uint8_t) num;
         
-        if(base[i] == ' '){
-            continue;
-        }
-        
-        buff[pos++] = strtol(&base[i], NULL, 16);
-        searchNextByte = true;
+        i += sz;
     }
     
     if(isString && pos < buffLen) buff[pos++] = '\0';
@@ -800,14 +812,14 @@ static bool cli_get_buff_arg(size_t argNum, uint8_t buff[], size_t buffLen, size
  * PRIVATE / PUBLIC FUNCTIONS
  *********************************************/
  
-void cli_treat_command(uint8_t cliBuffer[], size_t maxLen){
+void cli_treat_command(char cliBuffer[], size_t maxLen){
     if(maxLen == 0) return;
     if(cliBuffer == NULL) return;
     
 #if (defined(CLI_POLLING_EN) && CLI_POLLING_EN == 1)
     if(cli_cmd_waiting_treatment == false) return;
     
-    cli_cmd_waiting_treatment = false;
+    cli_cmd_waiting_treatment = false; 
 #endif //CLI_POLLING_EN
     
     cli_find_action(cliBuffer, maxLen);
@@ -821,24 +833,40 @@ void cli_treat_command(uint8_t cliBuffer[], size_t maxLen){
  * PUBLIC FUNCTIONS
  *********************************************/
 
-bool cli_get_int_argument(size_t argNum, int64_t *res){
-    return cli_get_int_arg(argNum, res, false);
+int64_t cli_get_int_argument(size_t argNum, bool *res){
+    int64_t ret = 0;
+    bool success = cli_get_int_arg(argNum, &ret, false);
+    
+    if(res != NULL) *res = success;
+    
+    return ret;
 }
 
-bool cli_get_uint_argument(size_t argNum, uint64_t *res){
-    return (uint64_t) cli_get_int_arg(argNum, res, true);
+uint64_t cli_get_uint_argument(size_t argNum, bool *res){
+    uint64_t ret = 0;
+    bool success = cli_get_int_arg(argNum, (int64_t*)&ret, false);
+    
+    if(res != NULL) *res = success;
+    
+    return ret;
 }
 
 #if (defined(CLI_FLOAT_EN) && CLI_FLOAT_EN == 1)
-bool cli_get_float_argument(size_t argNum, float *res){
+float cli_get_float_argument(size_t argNum, bool *res){
     if(currEl == NULL || argsStr == NULL) {
         ERR_PRINTF("Function usage is exculise to functions inside CLI");
-        return false;
+        
+        if(res != NULL) *res = 0;
+        
+        return 0;
     }
     
     if(currEl->args == NULL) {
         ERR_PRINTF("Argument string is null");
-        return false;
+        
+        if(res != NULL) *res = 0;
+        
+        return 0;
     }
     
     bool elipsisPresent = false;
@@ -846,7 +874,10 @@ bool cli_get_float_argument(size_t argNum, float *res){
     
     if(argNum >= len && !elipsisPresent) {
         ERR_PRINTF("Argument index out of bounds");
-        return false;
+        
+        if(res != NULL) *res = 0;
+        
+        return 0;
     }
     
     char* argBase = argsStr;
@@ -856,32 +887,72 @@ bool cli_get_float_argument(size_t argNum, float *res){
         
     if(argBase[0] == '\0') {
         ERR_PRINTF("Argument index %lu not found in buffer", argNum);
-        return false;
+        
+        if(res != NULL) *res = 0;
+        
+        return 0;
     }
     
     if( argNum < len && currEl->args[argNum] != 'f' && currEl->args[argNum] != '*') {
-            ERR_PRINTF("Expected argument of type 'f', but argument list says %c in index %lu", currEl->args[argNum], argNum);
-            return false;
+        ERR_PRINTF("Expected argument of type 'f', but argument list says %c in index %lu", currEl->args[argNum], argNum);
+        
+        if(res != NULL) *res = 0;
+        
+        return 0;
     }
     else if(argNum >= len || currEl->args[argNum] == '*'){
-        if(!cli_verify_float(argBase, true)) return false;
+        if(!cli_verify_float(argBase, true)){
+            if(res != NULL) *res = 0;
+            
+            return 0;
+        }
     }
     
-    *res = strtof(argBase, NULL);
+    float ret = strtof(argBase, NULL);
     
-    return true;
+    if(res != NULL) *res = 1;
+    
+    return ret;
 }
 #endif
 
-bool cli_get_buffer_argument(size_t argNum, uint8_t buff[], size_t buffLen, size_t* bRead){
-    return cli_get_buff_arg(argNum, buff, buffLen, bRead, false);
+size_t cli_get_buffer_argument(size_t argNum, uint8_t buff[], size_t buffLen, bool* res){
+    size_t bRead = 0;
+    bool ret = cli_get_buff_arg(argNum, buff, buffLen, &bRead, false);
+    
+    if(res != NULL) *res = ret;
+    
+    return bRead;
 }
 
-bool cli_get_string_argument(size_t argNum, uint8_t buff[], size_t buffLen, size_t* bRead){
-    return cli_get_buff_arg(argNum, buff, buffLen, bRead, true);
+size_t cli_get_buffer_argument_big_endian(size_t argNum, uint8_t buff[], size_t buffLen, bool* res){
+    size_t bRead = 0;
+    bool ret = cli_get_buff_arg(argNum, buff, buffLen, &bRead, false);
+    
+    uint8_t aux = 0;
+    
+    for(size_t i = 0; i < bRead / 2; i++){
+        aux = buff[i];
+        
+        buff[i] = buff[bRead - i - 1];
+        buff[bRead - i - 1] = aux;
+    }
+    
+    if(res != NULL) *res = ret;
+    
+    return bRead;
 }
 
-cli_status_e cli_insert_char(uint8_t cliBuffer[], size_t maxLen, char const c){
+size_t cli_get_string_argument(size_t argNum, uint8_t buff[], size_t buffLen, bool* res){
+    size_t bRead = 0;
+    bool ret = cli_get_buff_arg(argNum, buff, buffLen, &bRead, true);
+    
+    if(res != NULL) *res = ret;
+    
+    return bRead;
+}
+
+cli_status_e cli_insert_char(char cliBuffer[], size_t maxLen, char const c){
     if(maxLen == 0) return CLI_ERR;
     if(cliBuffer == NULL) return CLI_ERR;
     
@@ -891,6 +962,8 @@ cli_status_e cli_insert_char(uint8_t cliBuffer[], size_t maxLen, char const c){
         return CLI_WAITING_TREATMENT;
     }
 #endif //CLI_POLLING_EN
+
+    if(c == '\r') return CLI_CONTINUE;
 
     if(c != '\n'){
         cliBuffer[((len++)%maxLen)] = c;
@@ -931,33 +1004,37 @@ __attribute__((weak)) void cli_printf(char const * const str, ...){
  
 #warning "Cli disabled"
  
-bool cli_get_int_argument(size_t argNum, int64_t *res){
+int64_t cli_get_int_argument(size_t argNum, bool *res){
     return 0;
 }
 
-bool cli_get_uint_argument(size_t argNum, uint64_t *res){
+uint64_t cli_get_uint_argument(size_t argNum, bool *res){
     return 0;
 }
 
 #if (defined(CLI_FLOAT_EN) && CLI_FLOAT_EN == 1)
-bool cli_get_float_argument(size_t argNum, float *res){
+float cli_get_float_argument(size_t argNum, bool *res){
     return 0;
 }
 #endif
 
-bool cli_get_buffer_argument(size_t argNum, uint8_t buff[], size_t buffLen, size_t* bRead){
+size_t cli_get_buffer_argument(size_t argNum, uint8_t buff[], size_t buffLen, bool* res){
     return 0;
 }
 
-bool cli_get_string_argument(size_t argNum, uint8_t buff[], size_t buffLen, size_t* bRead){
+size_t cli_get_buffer_argument_big_endian(size_t argNum, uint8_t buff[], size_t buffLen, bool* res){
     return 0;
 }
 
-cli_status_e cli_insert_char(uint8_t cliBuffer[], size_t maxLen, char const c){
+size_t cli_get_string_argument(size_t argNum, uint8_t buff[], size_t buffLen, bool* res){
+    return 0;
+}
+
+cli_status_e cli_insert_char(char cliBuffer[], size_t maxLen, char const c){
     return CLI_DISABLED;
 }
 
-void cli_treat_command(uint8_t cliBuffer[], size_t maxLen){
+void cli_treat_command(char cliBuffer[], size_t maxLen){
     (void)cliBuffer;
     (void)maxLen;
 }
