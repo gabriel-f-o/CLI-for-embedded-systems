@@ -24,7 +24,9 @@ Useful information :
   the more CLI will be able to pinpoint exactly where is the problem.
   
 - Integers can be passed in hex and normal format (10, -10, 0x10), floats can be passed only uing the dot (2.5, -2.5), and strings and buffers can be passed using 
-  either {0A 0B 0C} where every byte is interpreted as a raw value, as well as "Hello" where characters are interpreted in ASCII (the escape characters \0, \n, \r, \", \\ are       supported)
+  either {b1 b2 b3} where every byte is interpreted as a raw value and the user can write its values like an unsigned integer, as well as "Hello" where characters are interpreted in ASCII (the escape characters \0, \n, \r, \\", \\\\ are supported)
+  
+- Hex format is automatically recognized if the letters 'a' to 'f' are found, other wise 0x is mandatory (e.g. '10' is the same as 'a' that is the same is '0xA', '16' is the same as '0x10') 
   
 - The difference between the string and the buffer is that the string will always be terminated with \0, where with buffer nothing is added.
 
