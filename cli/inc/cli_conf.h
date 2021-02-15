@@ -3,6 +3,11 @@
 #define CLI_EN 1
 #endif
 
+//Amount of characters between a menu /action name and its description (menu... <--amount-->- description) (action <--amount-->- description)
+#ifndef CLI_AMOUNT_OF_ALIGN_CHARS
+#define CLI_AMOUNT_OF_ALIGN_CHARS 12
+#endif
+
 //Enables and disables Float support (useful for MCUs that do not have FPU)
 #ifndef CLI_FLOAT_EN
 #define CLI_FLOAT_EN 1
@@ -13,7 +18,7 @@
 //the polling mode allows the user to chose the right moment to treat the received command. The CLI won't accept new characters ultil
 //the command is executed
 #ifndef CLI_POLLING_EN
-#define CLI_POLLING_EN 1
+#define CLI_POLLING_EN 0
 #endif
 
 //Enables the most basic printing (menus, actions and arguments descriptions)
