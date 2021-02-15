@@ -131,13 +131,21 @@ static int64_t cli_verify_args_str(cliElement_t const * const e, bool* elipsisPr
 static void cli_print_element(cliElement_t const * const e){
     if(e == NULL) return;
     
+    bool const is_sub_menu = cli_is_sub_menu(e);
+
     char const * const name = ( (e->name == NULL) ? "NULL_NAME" : e->name );
-    size_t len = strlen(name);
-    MENU_PRINTF("   %s%s", name, ( (cli_is_sub_menu(e) == true) ? "..." : "   ") );
     
-    for(int i = 0; i < (int)(15 - (len + 5)); i++) MENU_PRINTF(" ");
+    MENU_PRINTF("   %s%s", name, ( (is_sub_menu == true) ? "... " : " " ) );
     
-    MENU_PRINTLN(" - %s", ( (e->desc == NULL) ? "NULL_DESC" : e->desc) );
+    size_t len = strlen(name) + (3 * is_sub_menu) + 1; //name length with '... '
+
+    size_t spaces = (len + CLI_AMOUNT_OF_ALIGN_CHARS) / CLI_AMOUNT_OF_ALIGN_CHARS * CLI_AMOUNT_OF_ALIGN_CHARS; //Gets nearest multiple of CLI_AMOUNT_OF_ALIGN_CHARS that is bigger than len
+    
+    spaces -= len;
+
+    for(uint32_t i = 0; i < spaces; i++) MENU_PRINTF(" ");
+    
+    MENU_PRINTLN("- %s", ( (e->desc == NULL) ? "NULL_DESC" : e->desc) );
 } 
 
 static void cli_print_menu(cliElement_t const * const e){
@@ -680,14 +688,14 @@ static bool cli_get_int_arg(size_t argNum, int64_t *res, bool isUnsigned){
 
 static bool cli_get_quotes(char* base, int32_t argLen, uint8_t buff[], size_t buffLen, size_t *res, bool isString){
     int pos = 0;
-    bool err = false;
+    bool err = true;
     int endString = ( (isString == true) ? 1 : 0 );
     
     for(int i = 1; i < argLen - 1; i++){
         
         if(pos >= buffLen - endString){
             ERR_PRINTLN("Buffer received is too tiny, exiting...");
-            err = true;
+            err = false;
             break;
         }
         
@@ -716,7 +724,7 @@ static bool cli_get_quotes(char* base, int32_t argLen, uint8_t buff[], size_t bu
 
 static bool cli_get_curly_braces(char* base, int32_t argLen, uint8_t buff[], size_t buffLen, size_t *res,  bool isString){
     int pos = 0;
-    bool err = false;
+    bool err = true;
     int endString = ( (isString == true) ? 1 : 0 );
     
     bool searchNextByte = false;
@@ -733,13 +741,13 @@ static bool cli_get_curly_braces(char* base, int32_t argLen, uint8_t buff[], siz
         
         if(num > 255){
             ERR_PRINTLN("Buffer argument error in byte number %u : Exceeded maximum value", pos);
-            err = true;
+            err = false;
             break;
         }
         
         if(pos >= buffLen - endString){
             ERR_PRINTLN("Buffer received is too tiny, exiting...");
-            err = true;
+            err = false;
             break;
         }
         
