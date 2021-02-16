@@ -578,7 +578,8 @@ static void cli_execute_action(cliElement_t* e){
         if(cli_verify_arguments(e) == false) { DBG_PRINTLN("Invalid args"); break; }
         
         if(e->action == NULL) { 
-            ERR_PRINTF("No action configured for action '%s'", ( (e->name == NULL)  ? "NULL_NAME" : e->name ) );
+            ERR_PRINTLN("No action configured for action '%s'", ( (e->name == NULL)  ? "NULL_NAME" : e->name ) );
+            ERR_PRINTLN("");
             argsStr = NULL;
             return;
         }
@@ -595,7 +596,8 @@ static void cli_execute_action(cliElement_t* e){
     }while(0);
     
     argsStr = NULL;
-    MENU_PRINTF("Invalid arguments, use 10, -10, or 0x10 for integers, 2.5 or -2.5 for float, and \"foo\" or { 0A 0B } for strings and buffers\r\n\r\n");
+    MENU_PRINTLN("Invalid arguments, use 10, -10, or 0x10 for integers, 2.5 or -2.5 for float, and \"foo\" or { 0A 0B } for strings and buffers");
+    MENU_PRINTLN("");
     cli_print_action(e);
 }
 
