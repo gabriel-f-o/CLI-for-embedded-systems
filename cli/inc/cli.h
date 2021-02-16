@@ -30,7 +30,7 @@
   *     b    : {  b1    b2    b3  } (spaces dont matter). b1 b2 and b3 are bytes that can be passed like 'u' arguments (obviously limited to 255 or 0xFF)
   *          : "abc". in this case the data is interpreted as ASCII and copied to the buffer. The \0, \n, \r, \", \\ characters are supported)
   *     s    : same as 'b' but the buffer is terminated with \0 after getting all bytes
-  * /
+  **/
 
 /**********************************************
  * DEFINES
