@@ -71,12 +71,12 @@ static inline bool cli_is_terminator(cliElement_t const * const e){
 
 static inline bool cli_is_sub_menu(cliElement_t const * const e){
     if(e == NULL) return false;
-    return (e->args == NULL);  
+    return (e->subMenuRef != NULL);  
 }
 
 static inline bool cli_is_action(cliElement_t const * const e){
     if(e == NULL) return false;
-    return (e->args != NULL);
+    return (e->action != NULL);
 }
 
 static int64_t cli_verify_args_str(cliElement_t const * const e, bool* elipsisPresent){
@@ -104,6 +104,7 @@ static int64_t cli_verify_args_str(cliElement_t const * const e, bool* elipsisPr
             case '.' : {
                 if(len < i + 2 || e->args[i + 1] != '.' || e->args[i + 2] != '.'){
                     ERR_PRINTLN("Arguments string list contains incomplete elipsis for action '%s'", ( (e->name == NULL) ? "NULL_NAME" : e->name ) );
+                    ERR_PRINTLN("");
                     return -1;
                 }
                 
@@ -111,6 +112,7 @@ static int64_t cli_verify_args_str(cliElement_t const * const e, bool* elipsisPr
                 
                 if(len > i + 3){
                     ERR_PRINTLN("Arguments string list contains arguments after elipsis for action '%s'", ( (e->name == NULL) ? "NULL_NAME" : e->name ) );
+                    ERR_PRINTLN("");
                     return -1;
                 }
                 
@@ -119,7 +121,8 @@ static int64_t cli_verify_args_str(cliElement_t const * const e, bool* elipsisPr
             }
             
             default : {
-                ERR_PRINTLN("Unrecognized argument in argument list index %d for action '%s'", i, ( (e->name == NULL) ? "NULL_NAME" : e->name ) );
+                ERR_PRINTLN("Unrecognized character in argument list index %d for action '%s'", i, ( (e->name == NULL) ? "NULL_NAME" : e->name ) );
+                ERR_PRINTLN("");
                 return -1;
             }
         }
@@ -562,6 +565,8 @@ static void cli_execute_action(cliElement_t* e){
         bool elipsisPresent = false;
         int64_t len = cli_verify_args_str(e, &elipsisPresent);
         
+        if(len == -1) return;
+        
         argsStr = strtok(NULL, "\0");
         
         if(argsStr == NULL) argsStr = "";
@@ -621,9 +626,15 @@ static void cli_find_action(char cliBuffer[], size_t maxLen){
             currentMenu = e;
         }
         
-        if(cli_is_action(e)){
+        else if(cli_is_action(e)){
             DBG_PRINTLN("Action '%s' found", e->name);
             cli_execute_action(e);
+            return;
+        }
+        
+        else{
+            ERR_PRINTLN("Unknown type of CLI element (check for NULLs in CLIs defines ref cli.h lines 49 - 52)");
+            ERR_PRINTLN("");
             return;
         }
         
