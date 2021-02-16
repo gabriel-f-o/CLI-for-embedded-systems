@@ -212,9 +212,11 @@ static void cli_print_action(cliElement_t const * const e){
     if(elipsisPresent){
         MENU_PRINTF("   < various > - ");
         
-        if(!argsDescEnded)
-            MENU_PRINTLN("%s", e->argsDesc[i]); 
-            MENU_PRINTLN("");
+        argsDescEnded = (argsDescEnded == true || e->argsDesc == NULL || e->argsDesc[i] == NULL);
+
+        if(!argsDescEnded) MENU_PRINTLN("%s", e->argsDesc[i]); 
+        
+        MENU_PRINTLN("");
     }
     
     MENU_PRINTLN("");
@@ -726,7 +728,7 @@ static bool cli_get_curly_braces(char* base, int32_t argLen, uint8_t buff[], siz
     int pos = 0;
     bool err = true;
     int endString = ( (isString == true) ? 1 : 0 );
-        
+    
     for(int i = 1; i < argLen - 1; i++){
         
         if(base[i] == ' ') continue;
