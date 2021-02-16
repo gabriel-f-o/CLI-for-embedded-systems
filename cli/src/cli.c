@@ -726,9 +726,7 @@ static bool cli_get_curly_braces(char* base, int32_t argLen, uint8_t buff[], siz
     int pos = 0;
     bool err = true;
     int endString = ( (isString == true) ? 1 : 0 );
-    
-    bool searchNextByte = false;
-    
+        
     for(int i = 1; i < argLen - 1; i++){
         
         if(base[i] == ' ') continue;
@@ -852,7 +850,7 @@ int64_t cli_get_int_argument(size_t argNum, bool *res){
 
 uint64_t cli_get_uint_argument(size_t argNum, bool *res){
     uint64_t ret = 0;
-    bool success = cli_get_int_arg(argNum, (int64_t*)&ret, false);
+    bool success = cli_get_int_arg(argNum, (int64_t*)&ret, true);
     
     if(res != NULL) *res = success;
     
