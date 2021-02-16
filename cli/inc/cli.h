@@ -30,7 +30,7 @@
   *     b    : {  b1    b2    b3  } (spaces dont matter). b1 b2 and b3 are bytes that can be passed like 'u' arguments (obviously limited to 255 or 0xFF)
   *          : "abc". in this case the data is interpreted as ASCII and copied to the buffer. The \0, \n, \r, \", \\ characters are supported)
   *     s    : same as 'b' but the buffer is terminated with \0 after getting all bytes
-  **/
+  ***/
 
 /**********************************************
  * DEFINES
@@ -46,11 +46,10 @@
 #define cli_get_int32_argument(argNum, res)       ((int32_t) cli_get_int_argument(argNum, res))
 #define cli_get_int64_argument(argNum, res)       ((int64_t) cli_get_int_argument(argNum, res))
 
-#define cliMenuTerminator()                                             { NULL,     { NULL },            NULL,       NULL,       NULL }
-#define cliSubMenuElement(name, ref, desc)                              { (name),   { (void*)(ref) },    NULL,       (desc),     NULL }
-#define cliActionElement(name, fn, args, desc)                          { (name),   { (void*)(fn)  },    (args),     (desc),     NULL }
-#define cliActionElementDetailed(name, fn, args, desc, details)         { (name),   { (void*)(fn)  },    (args),     (desc),     (details) }
-
+#define cliMenuTerminator()                                             { NULL,     NULL,            NULL,        NULL,       NULL,       NULL }
+#define cliSubMenuElement(name, ref, desc)                              { (name),   (ref),           NULL,        NULL,       (desc),     NULL }
+#define cliActionElement(name, fn, args, desc)                          { (name),   NULL,            (fn),        (args),     (desc),     NULL }
+#define cliActionElementDetailed(name, fn, args, desc, details)         { (name),   NULL,            (fn),        (args),     (desc),     (details) }
 
 /**********************************************
  * PUBLIC TYPES
@@ -77,14 +76,15 @@ typedef char const * const cliArgumentsDetails_t;
 typedef struct cliElement{
     char const * const                          name;       //Unique name
     
-    union{
-        cliAction_t const                       action;     //Function to execute (if action)
-        struct cliElement const * const         subMenuRef; //Reference to sub menu (if sub menu)
-    };
-    
+    struct cliElement const * const             subMenuRef; //Reference to sub menu (if sub menu)
+
+    cliAction_t const                           action;     //Function to execute (if action)
     char const * const                          args;       //Arguments (if action), NULL if sub menu
+    
     char const * const                          desc;       //Description of the element (NULL to ignore)
+    
     cliArgumentsDetails_t const * const         argsDesc;   //Array of strings to describe each argument (NULL to ignore)
+
     
 }cliElement_t;
 
