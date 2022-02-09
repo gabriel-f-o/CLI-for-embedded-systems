@@ -5,8 +5,7 @@
  *      Author: INGE2
  */
 
-#include "common.h"
-#include "02_CLI/cli.h"
+#include "cli.h"
 
 #if ( defined(CLI_EN) && (CLI_EN == 1) )
 

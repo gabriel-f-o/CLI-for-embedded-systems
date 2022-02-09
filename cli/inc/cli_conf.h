@@ -10,7 +10,7 @@
 
 //Enables and disables Float support (useful for MCUs that do not have FPU)
 #ifndef CLI_FLOAT_EN
-#define CLI_FLOAT_EN 1
+#define CLI_FLOAT_EN 0
 #endif
 
 //Enables polling mode. In normal mode, the command is executed right after receiving \n character. Since the treatment can be quite lengthy
@@ -28,7 +28,7 @@
 
 //Enables a step further, printing what went wrong in your command. Useful to know why CLI did not accept your string.
 #ifndef CLI_ERROR_PRINT_ENABLE
-#define CLI_ERROR_PRINT_ENABLE 1
+#define CLI_ERROR_PRINT_ENABLE 0
 #endif
 
 //Enables debuging prints, you should leave this as 0

@@ -1,4 +1,4 @@
-#include "02_CLI/cli.h"
+#include "cli.h"
 
 #if (defined(CLI_EN) && CLI_EN == 1)
 
@@ -6,14 +6,14 @@
  * DEFINES
  *********************************************/
 
-#define BASE_PRINT(S, ...)       cli_printf(S,## __VA_ARGS__)
-#define BASE_PRINTF(S, ...)      cli_printf(S,## __VA_ARGS__)
-#define BASE_PRINTLN(S, ...)     cli_printf(S"\r\n", ##__VA_ARGS__)
+#define BASE_PRINT(S, ...)       		cli_printf(S,## __VA_ARGS__)
+#define BASE_PRINTF(S, ...)      		cli_printf(S,## __VA_ARGS__)
+#define BASE_PRINTLN(S, ...)    		cli_printf(S"\r\n", ##__VA_ARGS__)
 
 #if (defined(CLI_MENU_PRINT_ENABLE) && CLI_MENU_PRINT_ENABLE == 1)
-    #define MENU_PRINT(S, ...)       BASE_PRINT(S,## __VA_ARGS__)
-    #define MENU_PRINTF(S, ...)      BASE_PRINTF(S,## __VA_ARGS__)
-    #define MENU_PRINTLN(S, ...)     BASE_PRINTLN(S,## __VA_ARGS__)
+    #define MENU_PRINT(S, ...)       	BASE_PRINT(S,## __VA_ARGS__)
+    #define MENU_PRINTF(S, ...)      	BASE_PRINTF(S,## __VA_ARGS__)
+    #define MENU_PRINTLN(S, ...)     	BASE_PRINTLN(S,## __VA_ARGS__)
 #else
     #define MENU_PRINT(S, ...)
     #define MENU_PRINTF(S, ...)
@@ -21,9 +21,9 @@
 #endif
 
 #if (defined(CLI_ERROR_PRINT_ENABLE) && CLI_ERROR_PRINT_ENABLE == 1)
-    #define ERR_PRINT(S, ...)       BASE_PRINT(S,## __VA_ARGS__)
-    #define ERR_PRINTF(S, ...)      BASE_PRINTF(S,## __VA_ARGS__)
-    #define ERR_PRINTLN(S, ...)     BASE_PRINTLN(S,## __VA_ARGS__)
+    #define ERR_PRINT(S, ...)       	BASE_PRINT(S,## __VA_ARGS__)
+    #define ERR_PRINTF(S, ...)      	BASE_PRINTF(S,## __VA_ARGS__)
+    #define ERR_PRINTLN(S, ...)     	BASE_PRINTLN(S,## __VA_ARGS__)
 #else
     #define ERR_PRINT(S, ...)
     #define ERR_PRINTF(S, ...)
@@ -31,9 +31,9 @@
 #endif
 
 #if (defined(CLI_DEBUG_ENABLE) && CLI_DEBUG_ENABLE == 1)
-    #define DBG_PRINT(S, ...)       BASE_PRINT("[%s:%d]" S, __FILE__, __LINE__, ## __VA_ARGS__)
-    #define DBG_PRINTF(S, ...)      BASE_PRINTF(S,## __VA_ARGS__)
-    #define DBG_PRINTLN(S, ...)     BASE_PRINTLN("[%s:%d]" S, __FILE__, __LINE__,## __VA_ARGS__)
+    #define DBG_PRINT(S, ...)       	BASE_PRINT("[%s:%d]" S, __FILE__, __LINE__, ## __VA_ARGS__)
+    #define DBG_PRINTF(S, ...)      	BASE_PRINTF(S,## __VA_ARGS__)
+    #define DBG_PRINTLN(S, ...)     	BASE_PRINTLN("[%s:%d]" S, __FILE__, __LINE__,## __VA_ARGS__)
 #else
     #define DBG_PRINT(S, ...)
     #define DBG_PRINTF(S, ...)
@@ -108,7 +108,7 @@ static int64_t cli_verify_args_str(cliElement_t const * const e, bool* elipsisPr
                     return -1;
                 }
                 
-                DBG_PRINTLN("%ld, %d", len, i);
+                DBG_PRINTLN("%d, %d", len, i);
                 
                 if(len > i + 3){
                     ERR_PRINTLN("Arguments string list contains arguments after elipsis for action '%s'", ( (e->name == NULL) ? "NULL_NAME" : e->name ) );
@@ -447,7 +447,7 @@ static bool cli_verify_arguments(cliElement_t* e){
     bool elipsisPresent = 0;
     int64_t len = cli_verify_args_str(e, &elipsisPresent);
     
-    DBG_PRINTLN("Len = %ld, elipsisPresent = %d", len, elipsisPresent);
+    DBG_PRINTLN("Len = %d, elipsisPresent = %d", len, elipsisPresent);
     
     if(len == -1){
         return false;
@@ -473,27 +473,27 @@ static bool cli_verify_arguments(cliElement_t* e){
             #if (defined(CLI_FLOAT_EN) && CLI_FLOAT_EN == 1)
             case 'f' : {
                 if(cli_verify_float(argTkn, true)) break;
-                ERR_PRINTLN("Error occured in argument %ld in action '%s'", i, ( (e->name == NULL) ? "NULL_NAME" : e->name ) );
+                ERR_PRINTLN("Error occured in argument %d in action '%s'", i, ( (e->name == NULL) ? "NULL_NAME" : e->name ) );
                 return false;
             }
             #endif
             
             case 'i' : {
                 if(cli_verify_int(argTkn, false, true)) break;
-                ERR_PRINTLN("Error occured in argument %ld in action '%s'", i, ( (e->name == NULL) ? "NULL_NAME" : e->name ) );
+                ERR_PRINTLN("Error occured in argument %d in action '%s'", i, ( (e->name == NULL) ? "NULL_NAME" : e->name ) );
                 return false;
             }
             
             case 'u' : {
                 if(cli_verify_int(argTkn, true, true)) break;
-                ERR_PRINTLN("Error occured in argument %ld in action '%s'", i, ( (e->name == NULL) ? "NULL_NAME" : e->name ) );
+                ERR_PRINTLN("Error occured in argument %d in action '%s'", i, ( (e->name == NULL) ? "NULL_NAME" : e->name ) );
                 return false;
             }
             
             case 's' :
             case 'b' : {
                 if(cli_verify_buffer(argTkn, true)) break;
-                ERR_PRINTLN("Error occured in argument %ld in action '%s'", i, ( (e->name == NULL) ? "NULL_NAME" : e->name ) );
+                ERR_PRINTLN("Error occured in argument %d in action '%s'", i, ( (e->name == NULL) ? "NULL_NAME" : e->name ) );
                 return false;
             }
             
@@ -509,13 +509,13 @@ static bool cli_verify_arguments(cliElement_t* e){
                     break;
                 }
                 
-                ERR_PRINTLN("Error occured in argument %ld in action '%s'", i, ( (e->name == NULL) ? "NULL_NAME" : e->name ) );
+                ERR_PRINTLN("Error occured in argument %d in action '%s'", i, ( (e->name == NULL) ? "NULL_NAME" : e->name ) );
                 return false;
             }
             
             default : {
                 DBG_PRINTLN("Unrecognized arguments");
-                ERR_PRINTLN("Error occured in argument %ld in action '%s'", i, ( (e->name == NULL) ? "NULL_NAME" : e->name ) );
+                ERR_PRINTLN("Error occured in argument %d in action '%s'", i, ( (e->name == NULL) ? "NULL_NAME" : e->name ) );
                 return false;
             }
         }
@@ -533,7 +533,7 @@ static bool cli_verify_arguments(cliElement_t* e){
             
                 ) ) 
             {
-                ERR_PRINTLN("Error occured in argument %ld in action '%s'", i, ( (e->name == NULL) ? "NULL_NAME" : e->name ));
+                ERR_PRINTLN("Error occured in argument %d in action '%s'", i, ( (e->name == NULL) ? "NULL_NAME" : e->name ));
                 return false;
             }
             
@@ -574,7 +574,7 @@ static void cli_execute_action(cliElement_t* e){
         if(argsStr == NULL && len != 0) { ERR_PRINTLN("No arguments in list"); break; }
         
         while(argsStr != NULL && argsStr[0] != '\0') {
-            if(argsStr[0] == '-' || argsStr[0] == '{' || argsStr[0] == '"' || ('0' <= argsStr[0] && argsStr[0] <= '9') || ('a' <= argsStr[0] && argsStr[0] <= 'f')) break;
+            if(argsStr[0] == '-' || argsStr[0] == '{' || argsStr[0] == '"' || ('0' <= argsStr[0] && argsStr[0] <= '9') || ('a' <= tolower(argsStr[0]) && tolower(argsStr[0]) <= 'f')) break;
             argsStr++;
         }
         
@@ -649,7 +649,7 @@ static bool cli_buff_element_is_hex(char* base, size_t argLen){
     if(base[0] == '0' && tolower(base[1]) == 'x') return true;
     
     for(size_t i = 0; i < argLen; i++){
-        if('a' <= tolower(base[i]) && tolower(base[i]) <= 'z') return true;
+        if('a' <= tolower(base[i]) && tolower(base[i]) <= 'f') return true;
     }
     
     return false;
@@ -680,12 +680,12 @@ static bool cli_get_int_arg(size_t argNum, int64_t *res, bool isUnsigned){
         argBase = cli_go_to_next_argument(argBase);
         
     if(argBase[0] == '\0'){ 
-        ERR_PRINTLN("Argument '%c' index %lu not found in buffer", ( (isUnsigned) ? 'u' : 'i' ), argNum);
+        ERR_PRINTLN("Argument '%c' index %u not found in buffer", ( (isUnsigned) ? 'u' : 'i' ), argNum);
         return false; 
     }
 
     if( argNum < len && ( (isUnsigned && currEl->args[argNum] != 'u') || (!isUnsigned && currEl->args[argNum] != 'i') ) && currEl->args[argNum] != '*' ) {
-        ERR_PRINTLN("Expected argument of type '%c', but argument list says '%c' in index %lu", ( (isUnsigned) ? 'u' : 'i' ) , currEl->args[argNum], argNum);
+        ERR_PRINTLN("Expected argument of type '%c', but argument list says '%c' in index %u", ( (isUnsigned) ? 'u' : 'i' ) , currEl->args[argNum], argNum);
         return false;
     }
     else if(argNum >= len || currEl->args[argNum] == '*'){
@@ -801,12 +801,12 @@ static bool cli_get_buff_arg(size_t argNum, uint8_t buff[], size_t buffLen, size
         argBase = cli_go_to_next_argument(argBase);
         
     if(argBase[0] == '\0') {
-        ERR_PRINTLN("Argument '%c' number %lu not found in buffer", ( (isString) ? 's' : 'b' ), argNum );
+        ERR_PRINTLN("Argument '%c' number %u not found in buffer", ( (isString) ? 's' : 'b' ), argNum );
         return false;
     }
     
     if( argNum < len && ( (!isString && currEl->args[argNum] != 'b') || (isString && currEl->args[argNum] != 's' ) ) && currEl->args[argNum] != '*' ) {
-        ERR_PRINTLN("Expected argument of type 's', but argument list says %c in index %lu", currEl->args[argNum], argNum);
+        ERR_PRINTLN("Expected argument of type 's', but argument list says %c in index %u", currEl->args[argNum], argNum);
         return false;
     }
     else if(argNum >= len || currEl->args[argNum] == '*'){
@@ -816,7 +816,7 @@ static bool cli_get_buff_arg(size_t argNum, uint8_t buff[], size_t buffLen, size
     int32_t argLen = cli_arg_str_len(argBase);
     
     if(argLen == -1) { 
-        ERR_PRINTLN("Buffer in argument %lu does not end", argNum);
+        ERR_PRINTLN("Buffer in argument %u does not end", argNum);
         return false;
     }
 
@@ -907,7 +907,7 @@ float cli_get_float_argument(size_t argNum, bool *res){
         argBase = cli_go_to_next_argument(argBase);
         
     if(argBase[0] == '\0') {
-        ERR_PRINTF("Argument index %lu not found in buffer", argNum);
+        ERR_PRINTF("Argument index %u not found in buffer", argNum);
         
         if(res != NULL) *res = 0;
         
@@ -915,7 +915,7 @@ float cli_get_float_argument(size_t argNum, bool *res){
     }
     
     if( argNum < len && currEl->args[argNum] != 'f' && currEl->args[argNum] != '*') {
-        ERR_PRINTF("Expected argument of type 'f', but argument list says %c in index %lu", currEl->args[argNum], argNum);
+        ERR_PRINTF("Expected argument of type 'f', but argument list says %c in index %u", currEl->args[argNum], argNum);
         
         if(res != NULL) *res = 0;
         
@@ -1015,6 +1015,7 @@ __attribute__((weak)) void cli_printf(char const * const str, ...){
     va_start(args, str);
     vprintf(str, args);
     va_end(args);
+
 }
 
 #else
