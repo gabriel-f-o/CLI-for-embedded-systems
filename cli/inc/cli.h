@@ -82,7 +82,7 @@ typedef struct cliElement{
     char const * const                          args;       //Arguments (if action), NULL if sub menu
     
     char const * const                          desc;       //Description of the element (NULL to ignore)
-    
+
     cliArgumentsDetails_t const * const         argsDesc;   //Array of strings to describe each argument (NULL to ignore)
 
     
